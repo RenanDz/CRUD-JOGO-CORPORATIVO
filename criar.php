@@ -1,7 +1,6 @@
 <?php
 $arquivo = "data.txt";
 
-// Funções de leitura e escrita
 function lerDados($arquivo) {
     if(!file_exists($arquivo)) return [];
     $linhas = file($arquivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -16,7 +15,6 @@ function salvarDados($arquivo, $dados) {
     file_put_contents($arquivo, implode("\n",$linhas)."\n");
 }
 
-// Processar criação
 if($_SERVER['REQUEST_METHOD']==='POST') {
     $dados = lerDados($arquivo);
     $id = count($dados)+1;
