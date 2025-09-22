@@ -1,82 +1,92 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $pergunta = $_POST['pergunta'];
-    $tipo = $_POST['tipo'];
-    $respostas = [];
+$arquivo = "data.txt";
 
-    if ($tipo == "multipla") {
+// Funções de leitura e escrita
+function lerDados($arquivo) {
+    if(!file_exists($arquivo)) return [];
+    $linhas = file($arquivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $dados = [];
+    foreach($linhas as $linha) $dados[] = json_decode($linha, true);
+    return $dados;
+}
+
+function salvarDados($arquivo, $dados) {
+    $linhas = [];
+    foreach($dados as $d) $linhas[] = json_encode($d);
+    file_put_contents($arquivo, implode("\n",$linhas)."\n");
+}
+
+// Processar criação
+if($_SERVER['REQUEST_METHOD']==='POST') {
+    $dados = lerDados($arquivo);
+    $id = count($dados)+1;
+    $tipo = $_POST['tipo'];
+    $pergunta = htmlspecialchars($_POST['pergunta']);
+    $respostas = [];
+    $correta = '';
+
+    if($tipo==='multipla') {
         $respostas = [
-            "a) ".$_POST['a'],
-            "b) ".$_POST['b'],
-            "c) ".$_POST['c'],
-            "d) ".$_POST['d'],
-            "e) ".$_POST['e'],
+            "a" => htmlspecialchars($_POST['a']),
+            "b" => htmlspecialchars($_POST['b']),
+            "c" => htmlspecialchars($_POST['c']),
+            "d" => htmlspecialchars($_POST['d']),
+            "e" => htmlspecialchars($_POST['e'])
         ];
+        $correta = $_POST['correta'] ?? '';
     }
 
-    // Pegar último ID
-    $linhas = file("data.txt", FILE_IGNORE_NEW_LINES);
-    $id = count($linhas) + 1;
+    $dados[] = [
+        "id"=>$id,
+        "tipo"=>$tipo,
+        "pergunta"=>$pergunta,
+        "respostas"=>$respostas,
+        "correta"=>$correta
+    ];
 
-    $dados = ["id"=>$id,"tipo"=>$tipo,"pergunta"=>$pergunta,"respostas"=>$respostas];
-
-    file_put_contents("data.txt", json_encode($dados)."\n", FILE_APPEND);
-
-    echo "Pergunta cadastrada com sucesso! <a href='index.php'>Voltar</a>";
+    salvarDados($arquivo, $dados);
+    echo "Pergunta cadastrada com sucesso! <a href='criar.php'>Voltar</a>";
     exit;
 }
 ?>
 
-<form method="POST" action="?acao=criar">
-    Pergunta: <input type="text" name="pergunta" required><br>
-    
-    Tipo:
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Pergunta</title>
+</head>
+<body>
+<h1>Criar Pergunta</h1>
+
+<form method="POST" action="">
+    Pergunta:<br>
+    <input type="text" name="pergunta" required><br><br>
+
+    Tipo:<br>
     <select name="tipo" id="tipo" onchange="mostrarCampos()">
         <option value="">Selecione</option>
         <option value="multipla">Múltipla escolha</option>
         <option value="texto">Texto</option>
-    </select><br>
-    
+    </select><br><br>
+
     <div id="respostas" style="display:none;">
-        a) <input type="text" name="a"><br>
-        b) <input type="text" name="b"><br>
-        c) <input type="text" name="c"><br>
-        d) <input type="text" name="d"><br>
-        e) <input type="text" name="e"><br>
-    </div>
-    
+        a) <input type="text" name="a" required> <input type="radio" name="correta" value="a" required> Correta<br>
+        b) <input type="text" name="b" required> <input type="radio" name="correta" value="b"> Correta<br>
+        c) <input type="text" name="c" required> <input type="radio" name="correta" value="c"> Correta<br>
+        d) <input type="text" name="d" required> <input type="radio" name="correta" value="d"> Correta<br>
+        e) <input type="text" name="e" required> <input type="radio" name="correta" value="e"> Correta<br>
+    </div><br>
+
     <button type="submit">Salvar</button>
 </form>
 
 <script>
 function mostrarCampos() {
     var tipo = document.getElementById('tipo').value;
-    var respostas = document.getElementById('respostas');
-    if(tipo === 'multipla') {
-        respostas.style.display = 'block';
-    } else {
-        respostas.style.display = 'none';
-    }
+    document.getElementById('respostas').style.display = (tipo === 'multipla') ? 'block' : 'none';
 }
 </script>
 
-<?php if(isset($_POST['tipo']) && $_POST['tipo']=="multipla"): ?>
-<form method="POST">
-    <input type="hidden" name="tipo" value="multipla">
-    Pergunta: <input type="text" name="pergunta" required><br>
-    a) <input type="text" name="a" required><br>
-    b) <input type="text" name="b" required><br>
-    c) <input type="text" name="c" required><br>
-    d) <input type="text" name="d" required><br>
-    e) <input type="text" name="e" required><br>
-    <button type="submit">Salvar</button>
-</form>
-<?php endif; ?>
-
-<?php if(isset($_POST['tipo']) && $_POST['tipo']=="texto"): ?>
-<form method="POST">
-    <input type="hidden" name="tipo" value="texto">
-    Pergunta: <input type="text" name="pergunta" required><br>
-    <button type="submit">Salvar</button>
-</form>
-<?php endif; ?>
+</body>
+</html>
