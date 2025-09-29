@@ -1,1 +1,4 @@
+id|tipo|texto
+1|multipla|Qual a capital da França?
+2|texto|Como você resolveria um conflito entre equipes?
 
